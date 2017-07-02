@@ -280,8 +280,8 @@ export default class Snapshot {
       throw new Ember.Error("Model '" + Ember.inspect(this.record) + "' has no hasMany relationship named '" + keyName + "' defined.");
     }
 
-    hasData = get(relationship, 'hasData');
-    members = get(relationship, 'members');
+    hasData = relationship.hasData;
+    members = relationship.members;
 
     if (hasData) {
       results = [];
