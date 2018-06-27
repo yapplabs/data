@@ -871,7 +871,7 @@ test('destroying records in a belongsTo relationship that loaded via links', fun
     comment: Comment,
     adapter: DS.RESTAdapter.extend({
       shouldBackgroundReloadRecord: () => false,
-    })
+    }),
   });
 
   env.registry.register(
@@ -879,7 +879,7 @@ test('destroying records in a belongsTo relationship that loaded via links', fun
     DS.RESTAdapter.extend({
       deleteRecord() {
         return RSVP.resolve();
-      }
+      },
     })
   );
 
@@ -890,10 +890,10 @@ test('destroying records in a belongsTo relationship that loaded via links', fun
         return {
           post: {
             id: '1',
-            type: 'post'
-          }
-        }
-      }
+            type: 'post',
+          },
+        };
+      },
     })
   );
 
@@ -906,10 +906,10 @@ test('destroying records in a belongsTo relationship that loaded via links', fun
           relationships: {
             post: {
               links: {
-                related: '/comments/1/post'
-              }
-            }
-          }
+                related: '/comments/1/post',
+              },
+            },
+          },
         },
         {
           type: 'comment',
@@ -917,10 +917,10 @@ test('destroying records in a belongsTo relationship that loaded via links', fun
           relationships: {
             post: {
               links: {
-                related: '/comments/2/post'
-              }
-            }
-          }
+                related: '/comments/2/post',
+              },
+            },
+          },
         },
         {
           type: 'comment',
@@ -928,29 +928,31 @@ test('destroying records in a belongsTo relationship that loaded via links', fun
           relationships: {
             post: {
               links: {
-                related: '/comments/3/post'
-              }
-            }
-          }
-        }
-      ]
+                related: '/comments/3/post',
+              },
+            },
+          },
+        },
+      ],
     });
   });
 
   return run(() => {
     let comments = env.store.peekAll('comment').toArray();
-    let posts = RSVP.map(comments, (cc) => {
+    let posts = RSVP.map(comments, cc => {
       return cc.get('post');
     });
 
-    return posts.then(posts => {
-      assert.deepEqual(Ember.A(posts).mapBy('id'), ['1', '1', '1']);
-      let post = env.store.peekRecord('post', '1');
-      return post.destroyRecord();
-    }).then(() => {
-      let comment = env.store.peekRecord('comment', '1');
-      assert.equal(comment.get('post.content'), null);
-    });
+    return posts
+      .then(posts => {
+        assert.deepEqual(Ember.A(posts).mapBy('id'), ['1', '1', '1']);
+        let post = env.store.peekRecord('post', '1');
+        return post.destroyRecord();
+      })
+      .then(() => {
+        let comment = env.store.peekRecord('comment', '1');
+        assert.equal(comment.get('post.content'), null);
+      });
   });
 });
 
@@ -969,7 +971,7 @@ test('destroying records in a belongsTo relationship that loaded via sideloading
   env = setupStore({
     post: Post,
     comment: Comment,
-    adapter: DS.RESTAdapter.extend()
+    adapter: DS.RESTAdapter.extend(),
   });
 
   env.registry.register(
@@ -978,7 +980,7 @@ test('destroying records in a belongsTo relationship that loaded via sideloading
       deleteRecord() {
         return RSVP.resolve();
       },
-      shouldBackgroundReloadRecord: () => false
+      shouldBackgroundReloadRecord: () => false,
     })
   );
 
@@ -989,10 +991,10 @@ test('destroying records in a belongsTo relationship that loaded via sideloading
         return {
           post: {
             id: '1',
-            type: 'post'
-          }
-        }
-      }
+            type: 'post',
+          },
+        };
+      },
     })
   );
 
@@ -1005,8 +1007,9 @@ test('destroying records in a belongsTo relationship that loaded via sideloading
           relationships: {
             post: {
               data: {
-                type: 'post', id: '1'
-              }
+                type: 'post',
+                id: '1',
+              },
             },
           },
         },
@@ -1016,8 +1019,9 @@ test('destroying records in a belongsTo relationship that loaded via sideloading
           relationships: {
             post: {
               data: {
-                type: 'post', id: '1'
-              }
+                type: 'post',
+                id: '1',
+              },
             },
           },
         },
@@ -1027,33 +1031,34 @@ test('destroying records in a belongsTo relationship that loaded via sideloading
           relationships: {
             post: {
               data: {
-                type: 'post', id: '1'
-              }
+                type: 'post',
+                id: '1',
+              },
             },
           },
         },
       ],
-      included: [
-        { type: 'post', id: '1' }
-      ]
+      included: [{ type: 'post', id: '1' }],
     });
   });
 
   return run(() => {
     let comments = env.store.peekAll('comment').toArray();
-    let posts = RSVP.map(comments, (cc) => {
+    let posts = RSVP.map(comments, cc => {
       return cc.get('post');
     });
 
-    return posts.then(posts => {
-      console.log('posts', posts);
-      assert.deepEqual(Ember.A(posts).mapBy('id'), ['1', '1', '1']);
-      let post = env.store.peekRecord('post', '1');
-      return post.destroyRecord();
-    }).then(() => {
-      let comment = env.store.peekRecord('comment', '1');
-      assert.equal(comment.get('post.content'), null);
-    });
+    return posts
+      .then(posts => {
+        console.log('posts', posts);
+        assert.deepEqual(Ember.A(posts).mapBy('id'), ['1', '1', '1']);
+        let post = env.store.peekRecord('post', '1');
+        return post.destroyRecord();
+      })
+      .then(() => {
+        let comment = env.store.peekRecord('comment', '1');
+        assert.equal(comment.get('post.content'), null);
+      });
   });
 });
 
