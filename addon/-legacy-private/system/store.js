@@ -220,19 +220,19 @@ Store = Service.extend({
     this._serializerCache = Object.create(null);
 
     if (DEBUG) {
-      if (this._shouldTrackAsyncRequests === undefined) {
-        this._shouldTrackAsyncRequests = true;
+      if (this.shouldTrackAsyncRequests === undefined) {
+        this.shouldTrackAsyncRequests = false;
       }
-      if (this._generateStackTracesForTrackedRequests === undefined) {
-        this._generateStackTracesForTrackedRequests = false;
+      if (this.generateStackTracesForTrackedRequests === undefined) {
+        this.generateStackTracesForTrackedRequests = false;
       }
 
       this._trackedAsyncRequests = [];
       this._trackAsyncRequestStart = label => {
         let trace =
-          'set `store._generateStackTracesForTrackedRequests = true;` to get a detailed trace for where this request originated';
+          'set `store.generateStackTracesForTrackedRequests = true;` to get a detailed trace for where this request originated';
 
-        if (this._generateStackTracesForTrackedRequests) {
+        if (this.generateStackTracesForTrackedRequests) {
           try {
             throw new Error(`EmberData TrackedRequest: ${label}`);
           } catch (e) {
@@ -251,13 +251,15 @@ Store = Service.extend({
       this._trackAsyncRequestEnd = token => {
         let index = this._trackedAsyncRequests.indexOf(token);
 
-        if (index !== -1) {
-          this._trackedAsyncRequests.splice(index, 1);
+        if (index === -1) {
+          throw new Error(`Attempted to end tracking for the following request but it was not being tracked:\n${token}`);
         }
+
+        this._trackedAsyncRequests.splice(index, 1);
       };
 
       this.__asyncWaiter = () => {
-        let shouldTrack = this._shouldTrackAsyncRequests;
+        let shouldTrack = this.shouldTrackAsyncRequests;
         let tracked = this._trackedAsyncRequests;
         let isSettled = tracked.length === 0;
 
@@ -873,7 +875,7 @@ Store = Service.extend({
     };
 
     if (DEBUG) {
-      if (this._generateStackTracesForTrackedRequests === true) {
+      if (this.generateStackTracesForTrackedRequests === true) {
         let trace;
 
         try {
@@ -2897,19 +2899,19 @@ Store = Service.extend({
 
     if (DEBUG) {
       Ember.Test.unregisterWaiter(this.__asyncWaiter);
-      let shouldTrack = this._shouldTrackAsyncRequests;
+      let shouldTrack = this.shouldTrackAsyncRequests;
       let tracked = this._trackedAsyncRequests;
       let isSettled = tracked.length === 0;
 
       if (!isSettled) {
         if (shouldTrack) {
           throw new Error(
-            'Async Request leaks detected. Add a breakpoint here and set `store._generateStackTracesForTrackedRequests = true;`to inspect traces for leak origins:\n\t - ' +
+            'Async Request leaks detected. Add a breakpoint here and set `store.generateStackTracesForTrackedRequests = true;`to inspect traces for leak origins:\n\t - ' +
               tracked.map(o => o.label).join('\n\t - ')
           );
         } else {
           warn(
-            'Async Request leaks detected. Add a breakpoint here and set `store._generateStackTracesForTrackedRequests = true;`to inspect traces for leak origins:\n\t - ' +
+            'Async Request leaks detected. Add a breakpoint here and set `store.generateStackTracesForTrackedRequests = true;`to inspect traces for leak origins:\n\t - ' +
               tracked.map(o => o.label).join('\n\t - '),
             false,
             {

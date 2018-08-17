@@ -116,6 +116,7 @@ test('find calls do not resolve when the store is destroyed', async function(ass
 
   initializeStore(TestAdapter);
 
+  store.shouldTrackAsyncRequests = true;
   store.push = function() {
     assert('The test should have destroyed the store by now', store.get('isDestroyed'));
 

@@ -31,19 +31,20 @@ module('unit/store async-waiter and leak detection', function(hooks) {
       })
     );
     store = owner.lookup('service:store');
+    store.shouldTrackAsyncRequests = true;
   });
 
   test('the waiter properly waits for pending requests', async function(assert) {
-    let stepResolve;
-    let stepPromise = new Promise(resolveStep => {
-      stepResolve = resolveStep;
+    let findRecordWasInvoked;
+    let findRecordWasInvokedPromise = new Promise(resolveStep => {
+      findRecordWasInvoked = resolveStep;
     });
     this.owner.register(
       'adapter:application',
       JSONAPIAdapter.extend({
         findRecord() {
           return new Promise(resolve => {
-            stepResolve();
+            findRecordWasInvoked();
 
             setTimeout(() => {
               resolve({ data: { type: 'person', id: '1' } });
@@ -62,7 +63,7 @@ module('unit/store async-waiter and leak detection', function(hooks) {
       'We return true when no requests have been initiated yet (pending queue flush is async)'
     );
 
-    await stepPromise;
+    await findRecordWasInvokedPromise;
 
     assert.equal(waiter(), false, 'We return false to keep waiting while requests are pending');
 
@@ -72,16 +73,16 @@ module('unit/store async-waiter and leak detection', function(hooks) {
   });
 
   test('waiter can be turned off', async function(assert) {
-    let stepResolve;
-    let stepPromise = new Promise(resolveStep => {
-      stepResolve = resolveStep;
+    let findRecordWasInvoked;
+    let findRecordWasInvokedPromise = new Promise(resolveStep => {
+      findRecordWasInvoked = resolveStep;
     });
     this.owner.register(
       'adapter:application',
       JSONAPIAdapter.extend({
         findRecord() {
           return new Promise(resolve => {
-            stepResolve();
+            findRecordWasInvoked();
 
             setTimeout(() => {
               resolve({ data: { type: 'person', id: '1' } });
@@ -92,7 +93,7 @@ module('unit/store async-waiter and leak detection', function(hooks) {
     );
 
     // turn off the waiter
-    store._shouldTrackAsyncRequests = false;
+    store.shouldTrackAsyncRequests = false;
 
     let request = store.findRecord('person', '1');
     let waiter = store.__asyncWaiter;
@@ -103,7 +104,7 @@ module('unit/store async-waiter and leak detection', function(hooks) {
       'We return true when no requests have been initiated yet (pending queue flush is async)'
     );
 
-    await stepPromise;
+    await findRecordWasInvokedPromise;
 
     assert.equal(
       store._trackedAsyncRequests.length,
@@ -119,16 +120,16 @@ module('unit/store async-waiter and leak detection', function(hooks) {
 
   test('waiter works even when the adapter rejects', async function(assert) {
     assert.expect(4);
-    let stepResolve;
-    let stepPromise = new Promise(resolveStep => {
-      stepResolve = resolveStep;
+    let findRecordWasInvoked;
+    let findRecordWasInvokedPromise = new Promise(resolveStep => {
+      findRecordWasInvoked = resolveStep;
     });
     this.owner.register(
       'adapter:application',
       JSONAPIAdapter.extend({
         findRecord() {
           return new Promise((resolve, reject) => {
-            stepResolve();
+            findRecordWasInvoked();
 
             setTimeout(() => {
               reject({ errors: [] });
@@ -147,13 +148,11 @@ module('unit/store async-waiter and leak detection', function(hooks) {
       'We return true when no requests have been initiated yet (pending queue flush is async)'
     );
 
-    await stepPromise;
+    await findRecordWasInvokedPromise;
 
     assert.equal(waiter(), false, 'We return false to keep waiting while requests are pending');
 
-    await request.catch(e => {
-      assert.ok(true, 'promise was rejected');
-    });
+    await assert.rejects(request);
 
     assert.equal(waiter(), true, 'We return true to end waiting when no requests are pending');
   });
@@ -183,9 +182,7 @@ module('unit/store async-waiter and leak detection', function(hooks) {
       'We return true when no requests have been initiated yet (pending queue flush is async)'
     );
 
-    await request.catch(e => {
-      assert.ok(true, 'promise was rejected');
-    });
+    await assert.rejects(request);
 
     assert.equal(waiter(), true, 'We return true to end waiting when no requests are pending');
   });
@@ -257,7 +254,7 @@ module('unit/store async-waiter and leak detection', function(hooks) {
     );
 
     // turn off the waiter
-    store._shouldTrackAsyncRequests = false;
+    store.shouldTrackAsyncRequests = false;
 
     store.findRecord('person', '1');
     let waiter = store.__asyncWaiter;
@@ -321,7 +318,7 @@ module('unit/store async-waiter and leak detection', function(hooks) {
     assert.equal(waiter(), false, 'We return false to keep waiting while requests are pending');
     assert.equal(
       store._trackedAsyncRequests[0].trace,
-      'set `store._generateStackTracesForTrackedRequests = true;` to get a detailed trace for where this request originated',
+      'set `store.generateStackTracesForTrackedRequests = true;` to get a detailed trace for where this request originated',
       'We provide a useful default message in place of a trace'
     );
 
@@ -329,7 +326,7 @@ module('unit/store async-waiter and leak detection', function(hooks) {
 
     assert.equal(waiter(), true, 'We return true to end waiting when no requests are pending');
 
-    store._generateStackTracesForTrackedRequests = true;
+    store.generateStackTracesForTrackedRequests = true;
     request = store.findRecord('person', '2');
 
     assert.equal(
