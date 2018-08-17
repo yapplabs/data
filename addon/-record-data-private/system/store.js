@@ -257,9 +257,13 @@ Store = Service.extend({
       this._trackAsyncRequestEnd = token => {
         let index = this._trackedAsyncRequests.indexOf(token);
 
-        if (index !== -1) {
-          this._trackedAsyncRequests.splice(index, 1);
+        if (index === -1) {
+          throw new Error(
+            `Attempted to end tracking for the following request but it was not being tracked:\n${token}`
+          );
         }
+
+        this._trackedAsyncRequests.splice(index, 1);
       };
 
       this.__asyncWaiter = () => {
