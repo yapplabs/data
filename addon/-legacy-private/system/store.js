@@ -3125,11 +3125,11 @@ function isInverseRelationshipInitialized(store, internalModel, data, key, model
 }
 
 /**
- *
+ * @function
  * @param store
  * @param cache modelFactoryCache
  * @param normalizedModelName already normalized modelName
- * @returns {*}
+ * @return {*}
  */
 function getModelFactory(store, cache, normalizedModelName) {
   let factory = cache[normalizedModelName];

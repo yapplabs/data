@@ -3313,7 +3313,7 @@ function _commit(adapter, store, operation, snapshot) {
  * @param store
  * @param cache modelFactoryCache
  * @param normalizedModelName already normalized modelName
- * @returns {*}
+ * @return {*}
  */
 function getModelFactory(store, cache, normalizedModelName) {
   let factory = cache[normalizedModelName];
